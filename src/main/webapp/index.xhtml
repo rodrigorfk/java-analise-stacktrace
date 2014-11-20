@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html" 
+      xmlns:p="http://primefaces.org/ui" 
+      xmlns:f="http://java.sun.com/jsf/core">
+    <h:head>
+        <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+        <title>NT - Analise de Stacktrace</title>
+        <h:outputStylesheet library="css" name="bootstrap.min.css"/>
+        <style type="text/css">
+            body {
+                padding-top: 60px;
+                padding-bottom: 40px;
+            }
+            .navbar .nav-collapse .btn-group {
+                margin-top: 0;
+            }
+        </style>
+        <h:outputStylesheet library="css" name="bootstrap-responsive.min.css"/>
+    </h:head>
+    <h:body>
+
+        <div class="navbar navbar-inverse navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container">
+                    <a class="brand" href="#">Análise Stacktrace</a>
+                    <div class="nav-collapse collapse">
+                        <div class="pull-right nav-first">
+                            <a class="btn btn-success">Carregar TXT jstack</a>
+                            <a class="btn btn-primary">Carregar XML Análise</a>
+                        </div>
+                        <div class="pull-right nav-second" style="display: none;">
+                            <h:form id="formInfo" style="margin: 0;">
+                                <h:panelGroup id="nav-info" layout="block">
+                                    <div class="btn-group">
+                                        <a class="brand threadCount">Threads: #{indexController.jstackFileInfo.threadCount}</a>
+                                    </div>
+                                    <div class="btn-group">
+                                        <p:commandLink styleClass="btn btn-primary" value="Dump Stack" ajax="false" title="Dump do Stacktrace corrente da lista de Threads">
+                                            <p:fileDownload value="#{indexController.fileContentDump}"/>
+                                        </p:commandLink>
+                                    </div>
+                                    <div class="btn-group">
+                                        <p:commandLink styleClass="btn btn-primary" value="Gerar XML" ajax="false" title="Gerar XML com a posição atual das Categorias informadas">
+                                            <p:fileDownload value="#{indexController.fileContent}"/>
+                                        </p:commandLink>
+                                    </div>
+                                    <div class="btn-group">
+                                        <a class="btn btn-danger">Cancelar</a>
+                                    </div>
+                                </h:panelGroup>
+                            </h:form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="hero-unit info">
+                <h1>Análise de Stacktrace Java!</h1>
+                <p>Faça o upload de um arquivo TXT gerado pelo utilitário jstack a fim de poder analisar o status das threads do processo Java.</p>
+            </div>
+            
+            <div class="container-threads" style="display: none;">
+                <h:panelGroup layout="block" id="row-table">
+                    <div class="hero-unit detail">
+                        <p>#{indexController.jstackFileInfo.threadDumpInfo} #{indexController.jstackFileInfo.threadDumpDate}</p>
+                    </div>
+                    <div class="row">
+                        <div class="span12">
+                            <h:form id="form1">
+                                <p:accordionPanel multiple="true" activeIndex="1" id="accordion">
+                                    <p:tab title="Filtros">
+                                        <h:panelGroup layout="block" styleClass="form-horizontal" id="filtros">
+                                            <fieldset>
+                                                <div class="control-group">
+                                                    <label class="control-label" for="name">Name</label>
+                                                    <div class="controls">
+                                                        <p:inputText id="name" value="#{indexController.filterModel.name}" style="width: 300px;"/>
+                                                    </div>
+                                                </div>
+                                                <div class="control-group">
+                                                    <label class="control-label" for="name">State</label>
+                                                    <div class="controls">
+                                                        <p:selectOneMenu id="state" value="#{indexController.filterModel.state}" style="width: 300px;"> 
+                                                            <f:selectItem itemLabel="Selecione" itemValue="" />
+                                                            <f:selectItems value="#{indexController.filterModel.itensState}" />  
+                                                        </p:selectOneMenu>  
+                                                    </div>
+                                                </div>
+                                                <div class="control-group">
+                                                    <label class="control-label" for="stacktrace">Stacktrace</label>
+                                                    <div class="controls">
+                                                        <p:inputText id="stacktrace" value="#{indexController.filterModel.stacktrace}" style="width: 300px;"/>
+                                                    </div>
+                                                </div>
+                                                <div class="control-group">
+                                                    <div class="controls">
+                                                        <p:commandLink styleClass="btn btn-primary" value="Filtrar" 
+                                                                       action="#{indexController.filtrar}"
+                                                                       process="filtros" update="filtros, dataTable"
+                                                                       style="color: #ffffff;"/>
+                                                    </div>
+                                                </div>
+                                            </fieldset>
+                                        </h:panelGroup>
+                                    </p:tab>
+                                    <p:tab title="Lista" >
+                                        <p:dataTable id="dataTable" var="item" value="#{indexController.threads}" 
+                                                    paginator="true" paginatorAlwaysVisible="false" rows="18" paginatorPosition="bottom"
+                                                    emptyMessage="Não existem registros..." selectionMode="single">
+
+                                           <p:ajax event="rowSelect" listener="#{indexController.onRowSelect}"   
+                                               update=":form4" oncomplete="modalDetail.show();" /> 
+
+                                           <p:column headerText="Name" sortBy="#{item.name}">  
+                                               <h:outputText value="#{item.name}" />  
+                                           </p:column>  
+
+                                           <p:column headerText="Group" sortBy="${item.group}">  
+                                               <h:outputText value="#{item.group}" />  
+                                           </p:column> 
+
+                                           <p:column headerText="State" sortBy="${item.state}"> 
+                                               <h:outputText value="#{item.state}" />  
+                                           </p:column>  
+
+                                           <p:column headerText="Categories" sortBy="${item.txtCategories}"> 
+                                               <h:outputText value="#{item.txtCategories}" />  
+                                           </p:column>  
+
+                                       </p:dataTable>
+                                    </p:tab>
+                                </p:accordionPanel>
+                            </h:form>
+                        </div>
+                    </div>
+                </h:panelGroup>
+            </div>
+        </div>
+        
+        <p:dialog id="dialogUpload" header="Upload" widgetVar="modalUpload" modal="true" resizable="false"
+                  height="200" width="700">  
+            <h:form id="form3" enctype="multipart/form-data">
+
+                <p:fileUpload fileUploadListener="#{indexController.handleFileUpload}"  
+                              allowTypes="/(\.|\/)(txt|log)$/" mode="advanced" auto="true"/>
+
+            </h:form>
+        </p:dialog>  
+        
+        <p:dialog id="dialogUpload2" header="Upload" widgetVar="modalUpload2" modal="true" resizable="false"
+                  height="200" width="700">  
+            <h:form id="form5" enctype="multipart/form-data">
+
+                <p:fileUpload fileUploadListener="#{indexController.handleXmlFileUpload}"  
+                              allowTypes="/(\.|\/)(xml)$/" mode="advanced" auto="true"/>
+
+            </h:form>
+        </p:dialog> 
+        
+        <p:dialog id="dialogDetail" header="Thread detail" widgetVar="modalDetail" modal="true" resizable="true"
+                  height="400" width="900">  
+            <h:form id="form4">
+                <p:inputTextarea value="${indexController.selected.print()}" readonly="true" style="width: 100%; height: 300px; overflow: auto;"/>
+                <div style="margin-top: 10px;">
+                    <p:outputLabel for="categories" value="Classificação"/>
+                    <p:autoComplete id="categories" value="#{indexController.selectedCategories}" completeMethod="#{indexController.completeCategories}" multiple="true">
+                        <p:ajax event="itemSelect" listener="#{indexController.handleCategorySelect}" />
+                    </p:autoComplete>
+                </div>
+                <div class="row">
+                    <div class="pull-right">
+                        <p:commandButton id="saveBtn" value="Salvar" action="#{indexController.saveThread}"/>
+                    </div>
+                </div>
+            </h:form>
+        </p:dialog>
+        
+
+        <h:outputScript library="primefaces" name="jquery/jquery.js"/>
+        <h:outputScript library="js" name="bootstrap.min.js"/>
+
+        <script type="text/javascript">
+            $(".navbar .nav-first a.btn-success").click(function(event) {
+                event.preventDefault();
+                modalUpload.show();
+            });
+            $(".navbar .nav-first a.btn-primary").click(function(event) {
+                event.preventDefault();
+                modalUpload2.show();
+            });
+        
+            function onUploadCompleted(origin){
+                if(origin === 1){
+                    modalUpload.hide(); 
+                }else if(origin === 2){
+                    modalUpload2.hide();
+                }
+                $('.container .hero-unit.info').hide();
+                $(".pull-right.nav-first").hide();
+                $(".container-threads").show();
+                $(".pull-right.nav-second").show();
+                $(".pull-right.nav-second .btn-danger").click(function(event) {
+                    event.preventDefault();
+                    $('.container .hero-unit.info').show();
+                    $(".pull-right.nav-first").show();
+                    $(".container-threads").hide();
+                    $(".pull-right.nav-second").hide();
+                });
+            }
+        </script>
+
+        <style type="text/css">
+            .hero-unit.detail {
+                padding-bottom: 30px; padding-top: 30px;
+            }
+            .ui-autocomplete-input-token input {
+                -webkit-box-shadow: none;
+            }
+            .ui-autocomplete-input-token input:focus{
+                -webkit-box-shadow: none;
+                border: 0 none;
+            }
+            .brand.threadCount {
+                font-size: 14px;
+            }
+            
+        </style>
+        
+    </h:body>
+</html>
